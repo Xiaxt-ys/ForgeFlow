@@ -1,0 +1,9 @@
+# MCP demo profile:
+#   java -jar ... --spring.profiles.active=mcp
+# Requires a ChatModel bean for agents-flex; Echo mode ignores MCP tools.
+forgeflow:
+  mcp:
+    enabled: true
+    auto-approve-writes: false
+  agent:
+    executor: agents-flex

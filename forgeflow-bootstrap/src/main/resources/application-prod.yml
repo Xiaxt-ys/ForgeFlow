@@ -1,0 +1,48 @@
+# RabbitMQ + Redis + MySQL profile.
+# Start: java -jar forgeflow-bootstrap.jar --spring.profiles.active=prod
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/forgeflow?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-mysql.sql
+  rabbitmq:
+    listener:
+      simple:
+        auto-startup: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+forgeflow:
+  events:
+    mode: redis
+  compensation:
+    mode: jdbc
+  dispatch:
+    mode: rabbit
+  lease:
+    mode: redis
+  agent:
+    executor: agents-flex
+    turn-store: jdbc
+    turn-store-binary: MEDIUMBLOB
+  orchestration:
+    planner: llm
+    aggregator: llm
+  memory:
+    learner: llm
+    vector-store: ${FORGEFLOW_MEMORY_VECTOR_STORE:qdrant}
+    embedding:
+      provider: ${FORGEFLOW_MEMORY_EMBEDDING:http}   # 无 key 时自动降级为 hash
+  tenant:
+    mode: redis
+    max-inflight: 20
+  recovery:
+    enabled: true
+    scan-interval-ms: 5000

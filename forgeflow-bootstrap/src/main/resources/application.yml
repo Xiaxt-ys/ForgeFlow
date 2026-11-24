@@ -1,0 +1,141 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: forgeflow
+  datasource:
+    url: jdbc:h2:mem:forgeflow;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+    hikari:
+      # Fail fast when the database is gone instead of hanging for 30s.
+      connection-timeout: 3000
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        auto-startup: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+forgeflow:
+  llm:
+    deepseek:
+      enabled: ${DEEPSEEK_ENABLED:false}
+      api-key: ${DEEPSEEK_API_KEY:}
+      base-url: ${DEEPSEEK_BASE_URL:https://api.deepseek.com}
+      request-path: ${DEEPSEEK_REQUEST_PATH:/chat/completions}
+      model: ${DEEPSEEK_MODEL:deepseek-v4-flash}
+      fallback-model: ${DEEPSEEK_FALLBACK_MODEL:}
+      thinking: ${DEEPSEEK_THINKING:true}
+      reasoning-effort: ${DEEPSEEK_REASONING_EFFORT:low}
+      temperature: 0.3
+      max-tokens: 4096
+      first-packet-timeout-ms: 180000
+      failure-threshold: 3
+      open-duration-ms: 30000
+  loop:
+    enabled: true
+    max-steps: 20
+    repeat-threshold: 3
+    stable-state-threshold: 4
+  rbac:
+    enabled: true
+    default-role: OPERATOR
+    unknown-capability: DANGEROUS
+    tenant-roles:
+      tenant-a: ADMIN
+  sandbox:
+    enabled: true
+    # auto = container whenever a Docker daemon answers, else thread + loud warning;
+    # container = fail closed without Docker; thread = old thread/timeout only.
+    mode: ${FORGEFLOW_SANDBOX_MODE:auto}
+    timeout-ms: 10000
+    container:
+      image: ${FORGEFLOW_SANDBOX_IMAGE:alpine:3.20}
+      timeout-ms: 10000
+      binary: ${FORGEFLOW_SANDBOX_DOCKER:docker}
+  streaming:
+    enabled: ${FORGEFLOW_STREAMING:false}
+  tools:
+    local:
+      enabled: ${FORGEFLOW_LOCAL_TOOLS:false}
+      delete-sleep-ms: 0
+      workspace: ${FORGEFLOW_WORKSPACE:./workspace}
+  events:
+    mode: ${FORGEFLOW_EVENTS_MODE:memory}
+  compensation:
+    mode: ${FORGEFLOW_COMPENSATION_MODE:memory}
+    scan-interval-ms: 60000
+  handoff:
+    enabled: true
+    waiting-timeout-minutes: 30
+    scan-interval-ms: 60000
+  dispatch:
+    mode: local
+  lease:
+    mode: memory
+  agent:
+    executor: echo
+    turn-store: ${FORGEFLOW_TURN_STORE:memory}
+    turn-store-prefix: ff_agent_
+    turn-store-binary: BLOB
+  orchestration:
+    enabled: true
+    planner: ${FORGEFLOW_PLANNER:rule}
+    aggregator: ${FORGEFLOW_AGGREGATOR:concat}
+  memory:
+    enabled: ${FORGEFLOW_MEMORY:true}
+    learner: ${FORGEFLOW_MEMORY_LEARNER:rule}
+    recall: ${FORGEFLOW_MEMORY_RECALL:hybrid}
+    conflict: ${FORGEFLOW_MEMORY_CONFLICT:latest}
+    vector-store: ${FORGEFLOW_MEMORY_VECTOR_STORE:none}   # none | qdrant
+    qdrant:
+      base-url: ${FORGEFLOW_QDRANT_URL:http://localhost:6333}
+      api-key: ${FORGEFLOW_QDRANT_API_KEY:}
+      timeout-ms: 3000
+    embedding:
+      provider: ${FORGEFLOW_MEMORY_EMBEDDING:hash}   # hash | http
+      model: ${FORGEFLOW_EMBEDDING_MODEL:BAAI/bge-m3}
+      base-url: ${FORGEFLOW_EMBEDDING_BASE_URL:https://api.siliconflow.cn/v1}
+      path: ${FORGEFLOW_EMBEDDING_PATH:/embeddings}
+      api-key: ${FORGEFLOW_EMBEDDING_API_KEY:}
+      timeout-ms: 3000
+      cooldown-ms: 60000
+    max-context-chars: 2000
+    max-facts: 30
+    max-summary-chars: 2000
+    decay:
+      enabled: ${FORGEFLOW_MEMORY_DECAY:true}
+      retention-days: 7
+      min-hits: 2
+      max-facts-per-session: 200
+      scan-interval-ms: 600000
+  mcp:
+    enabled: false
+    auto-approve-writes: false
+  tenant:
+    mode: memory
+    max-inflight: 20
+  worker:
+    id: local-worker-1
+  recovery:
+    enabled: true
+    scan-interval-ms: 5000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
